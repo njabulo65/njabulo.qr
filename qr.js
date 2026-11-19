@@ -3,14 +3,14 @@ const express = require('express');
 const fs = require('fs');
 let router = express.Router();
 const pino = require("pino");
-const QRCode = require('qrcode'); // Ensure you ran: npm install qrcode
-
+const QRCode = require('qrcode');
 const {
     default: Njabulo_Jb,
     useMultiFileAuthState,
     delay,
     makeCacheableSignalKeyStore,
-    Browsers
+    Browsers,
+    fetchLatestBaileysVersion // <-- Added to fetch the correct WA version
 } = require("@whiskeysockets/baileys");
 
 function removeFile(FilePath) {
@@ -21,18 +21,27 @@ function removeFile(FilePath) {
 router.get('/', async (req, res) => {
     const id = makeid();
     
+    // Ensure the temp folder is absolutely clean before starting
+    await removeFile('./temp/' + id); 
+
     async function NJABULO_JB_QR_CODE() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
         
         try {
+            // Fetch the latest WhatsApp Web version to avoid protocol errors
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+
             let sock = Njabulo_Jb({
+                version, // <-- CRITICAL FIX: Pass the version
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
                 },
                 printQRInTerminal: false,
                 logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-                browser: Browsers.macOS('Chrome')
+                browser: Browsers.macOS('Chrome'),
+                syncFullHistory: false // <-- Saves memory on Render
             });
 
             sock.ev.on('creds.update', saveCreds);
@@ -40,29 +49,31 @@ router.get('/', async (req, res) => {
             sock.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect, qr } = s;
 
+                // Log the raw update so you can see it in Render logs
+                console.log("Connection Update:", JSON.stringify(s));
+
                 // 1. SHOW QR CODE ON THE WEBPAGE
                 if (qr) {
+                    console.log("✅ QR STRING RECEIVED FROM WHATSAPP");
                     const qrImage = await QRCode.toDataURL(qr);
                     if (!res.headersSent) {
-                        await res.send({ qr: qrImage }); // Sends the image to qr.html
+                        await res.send({ qr: qrImage }); 
                     }
                 }
 
                 // 2. WHEN DEVICE IS LINKED (SCANNED)
                 if (connection === "open") {
-                    
-                    // Tell the webpage we are connected
+                    console.log("✅ CONNECTED TO WHATSAPP");
                     if (!res.headersSent) {
                         await res.send({ connected: true });
                     }
                     
-                    await delay(3000); // Wait 3 seconds for creds.json to fully save
+                    await delay(3000); 
                     
                     try {
                         let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
                         let b64data = Buffer.from(data).toString('base64');
                         
-                        // SEND THE BASE64 SESSION ID
                         let sessionData = await sock.sendMessage(sock.user.id, { 
                             text: `njabulo~${b64data}` 
                         });
@@ -88,7 +99,6 @@ Welcome aboard 🚀
                             type: 1 
                         }];
 
-                        // SEND THE VIDEO
                         await sock.sendMessage(sock.user.id, {
                             video: fs.readFileSync('./public/connect.mp4'),
                             mimetype: 'video/mp4',
@@ -97,7 +107,6 @@ Welcome aboard 🚀
 
                         const videoUrl = "https://raw.githubusercontent.com/NjabuloJf/njabulo-data/main/njabuloimg/njabuloimg.png";
 
-                        // SEND THE IMAGE + WELCOME TEXT
                         await sock.sendMessage(sock.user.id, {
                             image: { url: videoUrl },
                             caption: FLASH_MD_TEXT,    
@@ -111,15 +120,20 @@ Welcome aboard 🚀
 
                     await delay(2000);
                     await sock.ws.close();
-                    return await removeFile('./temp/' + id); // Clean up
+                    return await removeFile('./temp/' + id); 
                     
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    NJABULO_JB_QR_CODE(); // Reconnect if disconnected normally
+                } else if (connection === "close") {
+                    // Log WHY it closed so you can see it in Render
+                    console.log("❌ CONNECTION CLOSED. Reason:", lastDisconnect?.error?.message);
+                    
+                    if (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                        await delay(10000);
+                        NJABULO_JB_QR_CODE(); 
+                    }
                 }
             });
         } catch (err) {
-            console.log("QR Service Error: ", err);
+            console.log("❌ QR Service Error: ", err);
             await removeFile('./temp/' + id);
             if (!res.headersSent) {
                 await res.send({ error: "Service is Currently Unavailable" });
