@@ -10,6 +10,7 @@ const {
     useMultiFileAuthState,
     delay,
     Browsers,
+    fetchLatestBaileysVersion,
     makeCacheableSignalKeyStore
 } = require("@whiskeysockets/baileys");
 
@@ -21,21 +22,18 @@ function removeFile(FilePath) {
 router.get('/', async (req, res) => {
     const id = makeid();
     
-    // If WhatsApp blocks the connection, send an error after 30 seconds
-    const timeout = setTimeout(() => {
-        if (!res.headersSent) {
-            res.status(503).send("Connection Timeout - WhatsApp is blocking Render. Try again.");
-        }
-    }, 30000);
-
     async function NJABULO_QR_CODE() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
         
         try {
+            // Get the newest WhatsApp Web version
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+
             let sock = Njabulo_Jb({
+                version,
                 auth: {
                     creds: state.creds,
-                    // This prevents WhatsApp from blocking the connection
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
                 },
                 printQRInTerminal: false,
@@ -50,12 +48,12 @@ router.get('/', async (req, res) => {
 
                 // 1. SEND QR IMAGE
                 if (qr && !res.headersSent) {
-                    clearTimeout(timeout); // Stop the 30s timer
                     res.type('png').set('Cache-Control', 'no-store, private').send(await QRCode.toBuffer(qr));
                 }
 
-                // 2. CONNECTED
+                // 2. CONNECTED SUCCESSFULLY
                 if (connection == "open") {
+                    console.log("✅ Connected successfully!");
                     await delay(3000);
                     try {
                         let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
@@ -74,22 +72,22 @@ router.get('/', async (req, res) => {
                     await sock.ws.close();
                     return await removeFile("temp/" + id);
                     
-                // 3. CONNECTION FAILED (WhatsApp blocked us)
+                // 3. CONNECTION FAILED
                 } else if (connection === "close") {
-                    clearTimeout(timeout);
+                    console.log("❌ Connection closed. Reason: ", lastDisconnect?.error);
+                    
                     if (!res.headersSent) {
-                        res.status(500).send("Connection Failed. Please reload.");
+                        res.status(500).send("Connection Failed.");
                     }
                     
                     if (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                         await delay(10000);
-                        NJABULO_QR_CODE();
+                        NJABULO_QR_CODE(); // Try again
                     }
                 }
             });
         } catch (err) {
-            clearTimeout(timeout);
-            console.log(err);
+            console.log("❌ ERROR: ", err);
             if (!res.headersSent) {
                 res.status(503).send("Service is Currently Unavailable");
             }
