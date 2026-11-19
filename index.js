@@ -7,24 +7,24 @@ let server = require('./qr'),
     code = require('./pair');
 require('events').EventEmitter.defaultMaxListeners = 500;
 
-// 1. API Endpoints (Data)
-app.use('/qr', server);      // qr.html fetches data from here
-app.use('/code', code);      // pair.html fetches data from here
-
-// 2. HTML Pages (Webpages)
-app.use('/pair', async (req, res, next) => {
-    res.sendFile(__path + '/qr.html');     // Link this to the button
+// 1. THE WEBPAGES (Put these FIRST)
+app.use('/qr', async (req, res, next) => {
+    res.sendFile(__path + '/qr.html'); 
 })
 
 app.use('/', async (req, res, next) => {
-    res.sendFile(__path + '/index.html');  // Homepage
+    res.sendFile(__path + '/index.html')
 })
 
-// 3. Body Parser
+// 2. THE API DATA (Put these SECOND and add /api)
+app.use('/api/qr', server);   // Changed to /api/qr
+app.use('/code', code);
+
+// 3. BODY PARSER
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// 4. Start Server
+// 4. START
 app.listen(PORT, () => {
     console.log(`
 Don't Forget To Give Star
