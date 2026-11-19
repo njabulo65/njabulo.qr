@@ -10,7 +10,7 @@ const {
     useMultiFileAuthState,
     delay,
     Browsers,
-    fetchLatestBaileysVersion
+    makeCacheableSignalKeyStore
 } = require("@whiskeysockets/baileys");
 
 function removeFile(FilePath) {
@@ -21,15 +21,23 @@ function removeFile(FilePath) {
 router.get('/', async (req, res) => {
     const id = makeid();
     
+    // If WhatsApp blocks the connection, send an error after 30 seconds
+    const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+            res.status(503).send("Connection Timeout - WhatsApp is blocking Render. Try again.");
+        }
+    }, 30000);
+
     async function NJABULO_QR_CODE() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
         
         try {
-            const { version } = await fetchLatestBaileysVersion();
-
             let sock = Njabulo_Jb({
-                version,
-                auth: state,
+                auth: {
+                    creds: state.creds,
+                    // This prevents WhatsApp from blocking the connection
+                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+                },
                 printQRInTerminal: false,
                 logger: pino({ level: "silent" }),
                 browser: Browsers.macOS("Desktop"),
@@ -40,11 +48,13 @@ router.get('/', async (req, res) => {
             sock.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect, qr } = s;
 
-                // SEND THE QR IMAGE TO THE WEBPAGE
+                // 1. SEND QR IMAGE
                 if (qr && !res.headersSent) {
+                    clearTimeout(timeout); // Stop the 30s timer
                     res.type('png').set('Cache-Control', 'no-store, private').send(await QRCode.toBuffer(qr));
                 }
 
+                // 2. CONNECTED
                 if (connection == "open") {
                     await delay(3000);
                     try {
@@ -64,15 +74,24 @@ router.get('/', async (req, res) => {
                     await sock.ws.close();
                     return await removeFile("temp/" + id);
                     
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    NJABULO_QR_CODE();
+                // 3. CONNECTION FAILED (WhatsApp blocked us)
+                } else if (connection === "close") {
+                    clearTimeout(timeout);
+                    if (!res.headersSent) {
+                        res.status(500).send("Connection Failed. Please reload.");
+                    }
+                    
+                    if (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                        await delay(10000);
+                        NJABULO_QR_CODE();
+                    }
                 }
             });
         } catch (err) {
+            clearTimeout(timeout);
             console.log(err);
             if (!res.headersSent) {
-                res.status(503).send("Error");
+                res.status(503).send("Service is Currently Unavailable");
             }
             await removeFile("temp/" + id);
         }
