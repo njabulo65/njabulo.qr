@@ -1,121 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Njabulo JB · QR Scanner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Njabulo JB · Link Device</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Outfit',sans-serif;}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:20px;color:#ece7ff;
+    background:radial-gradient(circle at 18% 0%, #1d1138 0%, transparent 55%),
+               radial-gradient(circle at 85% 100%, #1a1040 0%, transparent 52%),
+               linear-gradient(180deg,#0b0718 0%,#07050f 100%);
+  }
+  .container{
+    position:relative;width:100%;max-width:400px;padding:30px 24px;border-radius:36px;
+    background:linear-gradient(160deg,rgba(34,24,62,.88),rgba(13,9,26,.94));
+    border:1px solid rgba(167,139,250,.16);text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,.65), 0 0 70px rgba(124,58,237,.14);
+  }
+  .logo{width:80px;height:80px;border-radius:50%;margin:0 auto 15px;border:3px solid #0d0919; object-fit:cover; box-shadow:0 0 20px #8b5cf6;}
+  .title{font-size:1.5rem;font-weight:800;letter-spacing:1px;color:#a78bfa;margin-bottom:5px;}
+  .subtitle{font-size:.75rem;color:#9a8fc4;margin-bottom:20px;letter-spacing:.5px;}
+  
+  .qr-box{
+    position:relative;width:240px;height:240px;margin:0 auto;
+    background:#fff;border-radius:20px;padding:10px;display:grid;place-items:center;
+    box-shadow:0 10px 30px rgba(139,92,246,.3);overflow:hidden;
+  }
+  #qrImg{width:100%;height:100%;object-fit:contain;display:none;border-radius:10px;}
+  
+  .loader{font-size:.8rem;color:#6d28d9;font-weight:bold;}
+  .loader i{font-size:1.5rem;margin-bottom:10px;animation:spin 1s linear infinite;display:block;margin:0 auto 10px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  
+  .timer-wrap{width:240px;height:4px;background:rgba(255,255,255,.1);border-radius:10px;margin:15px auto;overflow:hidden;}
+  .timer-bar{height:100%;width:100%;background:linear-gradient(90deg,#8b5cf6,#22d3ee);transition:width 1s linear;}
+  
+  .status{font-size:.75rem;color:#b7a9e6;margin-bottom:20px;}
+  
+  .reload-btn{
+    display:inline-block;padding:12px 24px;border-radius:30px;font-size:.8rem;font-weight:bold;color:#fff;
+    background:linear-gradient(145deg,#8b5cf6,#6d28d9);text-decoration:none;transition:.3s;
+    box-shadow:0 8px 20px rgba(109,40,217,.4);
+  }
+  .reload-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(109,40,217,.6);}
+</style>
+<script>
+    // Start timer ONLY when the QR image successfully loads
+    let timeleft = 30;
+    let downloadTimer;
+
+    function startTimer() {
+        clearInterval(downloadTimer);
+        timeleft = 30;
+        document.getElementById("timerBar").style.width = "100%";
+        document.getElementById("statusText").innerHTML = "QR Ready! Scan now.";
         
-        body {
-            font-family: "Outfit", sans-serif;
-            background: linear-gradient(-45deg, #4a90e2, #3ac569, #9b59b6, #e74c3c);
-            background-size: 400% 400%;
-            animation: gradient 10s ease infinite;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        #content {
-            display: flex;
-            flex-direction: column;
-            width: 22rem;
-            text-align: center;
-            background-color: #000000;
-            padding: 1rem;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        #QR-content img {
-            border-radius: 10px;
-            width: 100%;
-            max-width: 20rem;
-            min-height: 20rem;
-            background: white;
-        }
-
-        #title-container {
-            padding: 1rem 1rem 0 1rem;
-            color: #fff;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        #description-container {
-            padding: 0 2rem;
-            color: #fff;
-            margin-bottom: 2rem;
-        }
-
-        .legend {
-            color: #fff;
-            font-size: 1em;
-            margin-top: 0.5em;
-            margin-bottom: 1em;
-        }
-
-        progress {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            accent-color: #3ac569;
-        }
-
-        .reload-button {
-            display: inline-block;
-            padding: 12px 20px;
-            background-color: #3498db;
-            color: #fff;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-
-        .reload-button:hover {
-            background-color: #2980b9;
-        }
-    </style>
-    <script>
-        var timeleft = 30;
-        var downloadTimer = setInterval(function () {
+        downloadTimer = setInterval(function () {
+            timeleft -= 1;
+            document.getElementById("timerBar").style.width = (timeleft / 30 * 100) + "%";
             if (timeleft <= 0) {
                 clearInterval(downloadTimer);
-                document.getElementById("progressBar").remove();
-                document.getElementById("main").innerHTML = "QR Expired!";
-                document.getElementById("legend").innerHTML = "Please click reload below.";
-            } else {
-                document.getElementById("progressBar").value = 30 - timeleft;
+                document.getElementById("statusText").innerHTML = "QR Expired! Please reload.";
+                document.getElementById("qrImg").style.opacity = "0.3";
             }
-            timeleft -= 1;
         }, 1000);
-    </script>
+    }
+</script>
 </head>
 <body>
-    <div id="content">
-        <div id="QR-content">
-            <!-- This pulls the PNG image from the server -->
-            <img id="qr-image" src="/server" alt="Loading QR...">
-        </div>
-        <div id="title-container">
-            <h2 id="main">NJABULO-JB QR</h2>
-            <p class="legend" id="legend">Scan The QR Code</p>
-        </div>
-        <div id="description-container">
-            <p id="semi" class="legend"></p>
-            <progress value="0" max="30" id="progressBar"></progress>
-        </div>
-        <a href="javascript:history.go(0)" class="reload-button">Reload Page</a>
+
+<div class="container">
+    <img src="https://raw.githubusercontent.com/NjabuloJf/njabulo-data/main/njabuloimg/njabuloimg3.png" class="logo" alt="Njabulo JB">
+    <h1 class="title">NJABULO-JB</h1>
+    <p class="subtitle"><i class="fas fa-qrcode"></i> Scan QR · Link Device</p>
+    
+    <div class="qr-box">
+        <div class="loader" id="loadingText"><i class="fas fa-spinner"></i>Generating QR...</div>
+        <!-- src="/server" calls the qr.js backend route -->
+        <img id="qrImg" src="/server" alt="QR Code" onload="document.getElementById('loadingText').style.display='none'; this.style.display='block'; startTimer();">
     </div>
+
+    <div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>
+    <p class="status" id="statusText">Waiting for server...</p>
+    
+    <a href="javascript:history.go(0)" class="reload-btn"><i class="fas fa-sync-alt"></i> Reload Page</a>
+</div>
+
 </body>
 </html>
