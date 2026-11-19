@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Njabulo JB · Pair Your Device</title>
+<title>Njabulo JB · Pair & Link</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif;}
@@ -90,10 +90,10 @@
   }
   @keyframes pulseCorner{0%{opacity:.15;transform:scale(.9);}100%{opacity:.35;transform:scale(1.25);}}
 
-  /* ===== LOGO + STATUS RING (original JS targets .status-ring) ===== */
+  /* ===== LOGO (keeps .status-ring so original JS can randomize its speed) ===== */
   .logo-wrapper{display:flex;justify-content:center;}
   .logo{
-    position:relative;width:118px;height:118px;margin-bottom:16px;
+    position:relative;width:104px;height:104px;margin-bottom:16px;
     border-radius:50%;filter:drop-shadow(0 0 24px rgba(139,92,246,.35));
   }
   .logo::before{
@@ -145,12 +145,12 @@
   @keyframes dotBlink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.75);}}
 
   .divider{
-    height:2px;width:62%;margin:22px auto 24px;border-radius:10px;
+    height:2px;width:62%;margin:22px auto 22px;border-radius:10px;
     background:linear-gradient(90deg,transparent,rgba(139,92,246,.75),rgba(34,211,238,.75),transparent);
     opacity:.8;
   }
 
-  /* ===== PAIR SECTION ===== */
+  /* ===== PAIR SECTION (same structure & IDs as original script) ===== */
   .pair-title{
     display:flex;align-items:center;justify-content:center;gap:9px;
     font-size:.8rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
@@ -197,7 +197,7 @@
 
   #pair{margin-top:16px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 
-  /* code-box: light lavender panel so your JS's inline dark colors stay readable */
+  /* light code-box so the original JS inline colors stay readable */
   .code-box{
     width:100%;display:flex;align-items:center;justify-content:center;gap:12px;
     padding:15px 22px;border-radius:60px;cursor:pointer;
@@ -219,6 +219,65 @@
     padding:3px 11px;border-radius:30px;color:#5935ac;
     background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.28);
   }
+
+  /* ===== OR DIVIDER ===== */
+  .or-divider{
+    display:flex;align-items:center;gap:12px;
+    margin:20px 0 16px;color:#7d72a3;
+    font-size:.62rem;letter-spacing:2px;text-transform:uppercase;font-weight:600;
+  }
+  .or-divider::before,.or-divider::after{
+    content:'';flex:1;height:1px;border-radius:10px;
+    background:linear-gradient(90deg,transparent,rgba(167,139,250,.4),transparent);
+  }
+
+  /* ===== QR CTA BUTTON → /pair (serves qr.html) ===== */
+  .qr-cta{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 20px;border-radius:22px;text-decoration:none;color:#fff;
+    background:linear-gradient(135deg, rgba(34,211,238,.16), rgba(139,92,246,.16));
+    border:1.5px solid rgba(34,211,238,.45);
+    box-shadow:
+      0 8px 30px rgba(34,211,238,.15),
+      inset 0 1px 0 rgba(255,255,255,.08);
+    transition:.3s cubic-bezier(.2,.8,.2,1);
+    position:relative;overflow:hidden;
+  }
+  .qr-cta::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(34,211,238,.22), rgba(139,92,246,.22));
+    opacity:0;transition:opacity .3s;
+  }
+  .qr-cta:hover{
+    transform:translateY(-3px);
+    border-color:rgba(34,211,238,.9);
+    box-shadow:
+      0 14px 40px rgba(34,211,238,.3),
+      0 0 60px rgba(34,211,238,.2),
+      inset 0 1px 0 rgba(255,255,255,.15);
+  }
+  .qr-cta:hover::before{opacity:1;}
+
+  .qr-icon{
+    flex:0 0 46px;height:46px;border-radius:14px;
+    display:grid;place-items:center;
+    background:linear-gradient(145deg,#22d3ee,#0ea5e9);
+    font-size:1.25rem;color:#062230;
+    box-shadow:0 0 22px rgba(34,211,238,.6);
+    position:relative;z-index:1;
+    animation:qrPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes qrPulse{
+    0%,100%{box-shadow:0 0 22px rgba(34,211,238,.6);}
+    50%{box-shadow:0 0 34px rgba(34,211,238,.95);}
+  }
+
+  .qr-text{flex:1;display:flex;flex-direction:column;text-align:left;gap:2px;position:relative;z-index:1;}
+  .qr-text strong{font-size:1rem;font-weight:800;letter-spacing:.4px;}
+  .qr-text small{font-size:.66rem;font-weight:500;letter-spacing:.3px;opacity:.85;}
+
+  .qr-arrow{font-size:.95rem;opacity:.8;transition:.25s;position:relative;z-index:1;color:#7dd3fc;}
+  .qr-cta:hover .qr-arrow{transform:translateX(4px);opacity:1;color:#fff;}
 
   /* ===== FEATURES ===== */
   .features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px;}
@@ -269,7 +328,7 @@
 
   @media(max-width:480px){
     .container{padding:28px 18px 24px;border-radius:36px;}
-    .logo{width:96px;height:96px;}
+    .logo{width:90px;height:90px;}
     .title{font-size:1.4rem;letter-spacing:1.5px;}
     .input-group{flex-wrap:wrap;gap:8px;padding:0;background:transparent;border:none;box-shadow:none;}
     .input-group input{
@@ -280,6 +339,9 @@
     .features{grid-template-columns:repeat(2,1fr);}
     .code-box{padding:13px 16px;flex-wrap:wrap;gap:8px;}
     .code-value{font-size:1.15rem;letter-spacing:2px;}
+    .qr-cta{padding:14px 16px;gap:12px;}
+    .qr-icon{flex:0 0 42px;height:42px;font-size:1.1rem;}
+    .qr-text strong{font-size:.95rem;}
   }
 </style>
 </head>
@@ -292,13 +354,13 @@
 
   <div class="container">
 
-    <!-- LOGO — .status-ring kept so original JS can randomize its speed -->
+    <!-- LOGO (with status-ring so original JS can randomize speed) -->
     <div class="logo-wrapper">
       <div class="logo" id="logo">
         <span class="status-ring" aria-hidden="true"></span>
         <img src="https://raw.githubusercontent.com/NjabuloJf/njabulo-data/main/njabuloimg/njabuloimg3.png"
              alt="Njabulo JB MiniBot"
-             onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(145deg,#2a1b52,#150e2b)';this.parentNode.innerHTML+='<i class=\'fas fa-robot\' style=\'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.6rem;color:#a78bfa;z-index:1;\'></i>';">
+             onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(145deg,#2a1b52,#150e2b)';this.parentNode.innerHTML+='<i class=\'fas fa-robot\' style=\'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:#a78bfa;z-index:1;\'></i>';">
       </div>
     </div>
 
@@ -309,12 +371,12 @@
 
     <div class="divider"></div>
 
-    <!-- PAIR SECTION — IDs match your original JS exactly -->
+    <!-- ═══════════ PAIR SECTION (numbers + copy kept — original IDs) ═══════════ -->
     <div class="pair-section">
-      <div class="pair-title"><i class="fas fa-link"></i> Pair Your Device</div>
+      <div class="pair-title"><i class="fas fa-link"></i> Pair with Code</div>
 
       <div class="input-group">
-        <input type="text" id="number" placeholder="e.g. 267 71 234 567" autocomplete="off">
+        <input type="text" id="number" placeholder="enter your number with country code" value="">
         <button id="submit"><i class="fas fa-paper-plane"></i> Pair</button>
       </div>
 
@@ -325,6 +387,21 @@
       <main id="pair"></main>
     </div>
 
+    <!-- ═══════════ OR ═══════════ -->
+    <div class="or-divider">or</div>
+
+    <!-- ═══════════ QR BUTTON → /pair → qr.html ═══════════ -->
+    <!-- If you change your server route, only edit href below. -->
+    <a href="/pair" class="qr-cta">
+      <span class="qr-icon"><i class="fas fa-qrcode"></i></span>
+      <span class="qr-text">
+        <strong>Link with QR Code</strong>
+        <small>Scan to connect your device</small>
+      </span>
+      <i class="fas fa-arrow-right qr-arrow"></i>
+    </a>
+
+    <!-- FEATURES -->
     <div class="features">
       <div class="feature-item"><span class="icon">🌍</span><span class="label">Multi-Language</span></div>
       <div class="feature-item"><span class="icon">🛡️</span><span class="label">Anti-Link</span></div>
@@ -334,6 +411,7 @@
       <div class="feature-item"><span class="icon">🔒</span><span class="label">Auto-Mod</span></div>
     </div>
 
+    <!-- COMMANDS -->
     <div class="commands-section">
       <h3><i class="fas fa-bolt"></i> Quick Commands</h3>
       <div class="command-grid">
@@ -350,6 +428,7 @@
       </div>
     </div>
 
+    <!-- FOOTER -->
     <div class="footer-note">
       <i class="fas fa-bolt"></i> humans for humans
       <span class="sep"></span>
@@ -358,11 +437,11 @@
 
   </div>
 
-  <!-- ==================================================================
-       ORIGINAL SCRIPT — UNTOUCHED
-       Same /code axios call · Same Copy() · Same formatDisplay
-       Same IDs: pair, submit, number, waiting-message, copyTarget, status-ring
-       ================================================================== -->
+  <!-- ═══════════════════════════════════════════════════════════
+       ORIGINAL PAIR SCRIPT — UNTOUCHED
+       /code axios call · Copy() · formatDisplay · status-ring
+       All IDs: pair, submit, number, waiting-message, copyTarget, status-ring
+       ═══════════════════════════════════════════════════════════ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
     (function(){
