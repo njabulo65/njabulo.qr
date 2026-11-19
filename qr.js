@@ -1,100 +1,117 @@
-const { makeid } = require('./id');
-const QRCode = require('qrcode');
+const PastebinAPI = require('pastebin-js'),
+pastebin = new PastebinAPI('EMWTMkQAVfJa9kM-MRUrxd5Oku1U7pgL')
+const {makeid} = require('./id');
 const express = require('express');
 const fs = require('fs');
-let router = express.Router();
+let router = express.Router()
 const pino = require("pino");
-
 const {
     default: Njabulo_Jb,
     useMultiFileAuthState,
     delay,
-    Browsers,
-    fetchLatestBaileysVersion,
-    makeCacheableSignalKeyStore
+    makeCacheableSignalKeyStore,
+    Browsers
 } = require("@whiskeysockets/baileys");
 
-function removeFile(FilePath) {
-    if (!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true });
-}
-
+function removeFile(FilePath){
+    if(!fs.existsSync(FilePath)) return false;
+    fs.rmSync(FilePath, { recursive: true, force: true })
+ };
 router.get('/', async (req, res) => {
     const id = makeid();
-    
-    async function NJABULO_QR_CODE() {
-        const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
-        
-        try {
-            // Get the newest WhatsApp Web version
-            const { version, isLatest } = await fetchLatestBaileysVersion();
-            console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
-
-            let sock = Njabulo_Jb({
-                version,
+    let num = req.query.number;
+        async function NJABULO_JB_PAIR_CODE() {
+        const {
+            state,
+            saveCreds
+        } = await useMultiFileAuthState('./temp/'+id)
+     try {
+            let Pair_Code_By_Njabulo_Jb = Njabulo_Jb({
                 auth: {
                     creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+                    keys: makeCacheableSignalKeyStore(state.keys, pino({level: "fatal"}).child({level: "fatal"})),
                 },
                 printQRInTerminal: false,
-                logger: pino({ level: "silent" }),
-                browser: Browsers.macOS("Desktop"),
-            });
-
-            sock.ev.on('creds.update', saveCreds);
-
-            sock.ev.on("connection.update", async (s) => {
-                const { connection, lastDisconnect, qr } = s;
-
-                // 1. SEND QR IMAGE
-                if (qr && !res.headersSent) {
-                    res.type('png').set('Cache-Control', 'no-store, private').send(await QRCode.toBuffer(qr));
+                logger: pino({ level: "fatal" }).child({ level: "fatal" }),
+                browser: Browsers.macOS('Chrome')
+             });
+             if(!Pair_Code_By_Njabulo_Jb.authState.creds.registered) {
+                await delay(1500);
+                num = num.replace(/[^0-9]/g,'');
+                const custom = "NJABULOJ";
+                const code = await Pair_Code_By_Njabulo_Jb.requestPairingCode(num, custom)
+                if(!res.headersSent){
+                    await res.send({code});
                 }
-
-                // 2. CONNECTED SUCCESSFULLY
+             }
+            Pair_Code_By_Njabulo_Jb.ev.on('creds.update', saveCreds)
+            Pair_Code_By_Njabulo_Jb.ev.on("connection.update", async (s) => {
+                const {
+                    connection,
+                    lastDisconnect
+                } = s;
                 if (connection == "open") {
-                    console.log("✅ Connected successfully!");
-                    await delay(3000);
-                    try {
-                        let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
-                        let b64data = Buffer.from(data).toString('base64');
-                        
-                        let session = await sock.sendMessage(sock.user.id, { text: 'njabulo~' + b64data });
+                await delay(50000);
+                let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
+                await delay(8000);
+               let b64data = Buffer.from(data).toString('base64');
+               let sessionData = await Pair_Code_By_Njabulo_Jb.sendMessage(Pair_Code_By_Njabulo_Jb.user.id, { text: `njabulo~${b64data}` });
 
-                        let MSG = `*🎉 Pairing complete!*\nYour session ID has been saved.\nYou’re now connected to Njabulo JB.\n\n✅ Try .deploy to see what I can do\n🔒 Never share your session ID\n\nGithub github.com/NjabuloJf/Njabulo-Jb\nWelcome aboard 🚀`;
+               let FLASH_MD_TEXT = `
+*🎉 Pairing complete!*
+Your session ID has been saved.
+You’re now connected to Njabulo JB.
 
-                        await sock.sendMessage(sock.user.id, { text: MSG }, { quoted: session });
-                    } catch (err) {
-                        console.log("Error sending session:", err);
-                    }
+✅ Try .deploy to see what I can do
+✅ SESSION_ID is alive to confirm I’m online
+🔒 Never share your session ID
+🆘 Need help? Use .owner
+
+Github github.com/NjabuloJf/Njabulo-Jb 
+Website bot njabulo-ai.vercel.app
+Welcome aboard 🚀
+`
+
+    const buttons = [
+  { 
+    buttonId: 'njabulo_copy', 
+    buttonText: { displayText: '📋 Copy Code' }, 
+    type: 1 
+  },
+]                
+
                     
-                    await delay(1000);
-                    await sock.ws.close();
-                    return await removeFile("temp/" + id);
+ await Pair_Code_By_Njabulo_Jb.sendMessage(Pair_Code_By_Njabulo_Jb.user.id,{
+video: fs.readFileSync('./public/connect.mp4'),
+          mimetype: 'video/mp4',
+          ptv: true
+        } );        
+const videoUrl = "https://raw.githubusercontent.com/NjabuloJf/njabulo-data/main/njabuloimg/njabuloimg.png";
                     
-                // 3. CONNECTION FAILED
-                } else if (connection === "close") {
-                    console.log("❌ Connection closed. Reason: ", lastDisconnect?.error);
-                    
-                    if (!res.headersSent) {
-                        res.status(500).send("Connection Failed.");
-                    }
-                    
-                    if (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                        await delay(10000);
-                        NJABULO_QR_CODE(); // Try again
-                    }
+ await Pair_Code_By_Njabulo_Jb.sendMessage(Pair_Code_By_Njabulo_Jb.user.id,{
+    image: { url: videoUrl },
+     caption: FLASH_MD_TEXT,    
+    buttons: buttons,
+    headerType: 1
+     },{quoted:sessionData})
+ 
+
+        await delay(100);
+        await Pair_Code_By_Njabulo_Jb.ws.close();
+        return await removeFile('./temp/'+id);
+            } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    await delay(10000);
+                    NJABULO_JB_PAIR_CODE();
                 }
             });
         } catch (err) {
-            console.log("❌ ERROR: ", err);
-            if (!res.headersSent) {
-                res.status(503).send("Service is Currently Unavailable");
-            }
-            await removeFile("temp/" + id);
+            console.log("service restated");
+            await removeFile('./temp/'+id);
+         if(!res.headersSent){
+            await res.send({code:"Service is Currently Unavailable"});
+         }
         }
     }
-    return await NJABULO_QR_CODE();
+    return await NJABULO_JB_PAIR_CODE()
 });
-
-module.exports = router;
+module.exports = router
