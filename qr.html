@@ -1,97 +1,28 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1737874207490861"
-            crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> QR SCANER</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&amp;display=swap" rel="stylesheet">
-    <title>QR</title>
+    <title>Njabulo JB · QR Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        .bg {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-size: 400% 400%;
-            animation: AnimateBG 25s ease infinite;
-        }
-
-        @keyframes AnimateBG {
-            0% {
-                background-position: 0% 50%
-            }
-
-            50% {
-                background-position: 100% 50%
-            }
-
-            100% {
-                background-position: 0% 50%
-            }
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            margin: 0;
-            padding: 0;
-            font-family: "Outfit";
+            font-family: "Outfit", sans-serif;
             background: linear-gradient(-45deg, #4a90e2, #3ac569, #9b59b6, #e74c3c);
             background-size: 400% 400%;
             animation: gradient 10s ease infinite;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
         }
 
         @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        jsl.code {
-            overflow: hidden;
-            background: linear-gradient(-45deg, #f1c40f, #3498db, #2ecc71, #e74c3c);
-            background-size: 400% 400%;
-            animation: gradient 8s ease infinite;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-family: 'Montserrat', sans-serif;
-            height: 110vh;
-            margin: 0px;
-
-        }
-
-        p.legend {
-            color: #fff;
-            font-size: 1em;
-            font-weight: 400;
-            padding: 0em 1.1em;
-            margin-top: 0.1em;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        :root {
-            --main-color: hsl(212, 45%, 89%);
-            --principalText-color: hsl(218, 44%, 22%);
-            --secondText-color: hsl(220, 15%, 55%);
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         #content {
@@ -102,11 +33,15 @@
             background-color: #000000;
             padding: 1rem;
             border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #QR-content img {
             border-radius: 10px;
-            width: 20rem;
+            width: 100%;
+            max-width: 20rem;
+            min-height: 20rem;
+            background: white;
         }
 
         #title-container {
@@ -117,30 +52,38 @@
         }
 
         #description-container {
-            padding: 0 2.5rem 0 2.5rem;
+            padding: 0 2rem;
             color: #fff;
             margin-bottom: 2rem;
         }
 
-        #p-legend {
+        .legend {
+            color: #fff;
             font-size: 1em;
-            font-weight: 400;
-            padding: 0em 1.1em;
-            margin-top: 0.1em;
+            margin-top: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            accent-color: #3ac569;
         }
 
         .reload-button {
             display: inline-block;
-            padding: 10px 20px;
-            background-color: #3498db; /* Blue color */
-            color: #fff; /* White text color */
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: #fff;
+            font-weight: bold;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            border-radius: 8px;
+            transition: 0.3s;
         }
 
         .reload-button:hover {
-            background-color: #2980b9; /* Darker blue color on hover */
+            background-color: #2980b9;
         }
     </style>
     <script>
@@ -149,22 +92,23 @@
             if (timeleft <= 0) {
                 clearInterval(downloadTimer);
                 document.getElementById("progressBar").remove();
-                document.getElementById("main").innerHTML = "QR Expired! Please reload";
-                document.getElementById("legend").innerHTML = ""
+                document.getElementById("main").innerHTML = "QR Expired!";
+                document.getElementById("legend").innerHTML = "Please click reload below.";
+            } else {
+                document.getElementById("progressBar").value = 30 - timeleft;
             }
-            document.getElementById("progressBar").value = 30 - timeleft;
             timeleft -= 1;
         }, 1000);
     </script>
 </head>
 <body>
-<div class="bg">
     <div id="content">
         <div id="QR-content">
-            <img id="qr-image" src="/server" alt="QR CODE">
+            <!-- This pulls the PNG image from the server -->
+            <img id="qr-image" src="/server" alt="Loading QR...">
         </div>
         <div id="title-container">
-            <h2 id="main">DAVE-MD QR PAIR</h2>
+            <h2 id="main">NJABULO-JB QR</h2>
             <p class="legend" id="legend">Scan The QR Code</p>
         </div>
         <div id="description-container">
@@ -173,7 +117,5 @@
         </div>
         <a href="javascript:history.go(0)" class="reload-button">Reload Page</a>
     </div>
-</div>
 </body>
-  </html>
-              
+</html>
